@@ -1,0 +1,40 @@
+name: Docker checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container
+        run: docker build -f deploy/oracle/Dockerfile -t naukri-automation:test .
+      - name: Check compose and shell scripts
+        run: |
+          docker compose -f deploy/oracle/compose.yaml config --quiet
+          bash -n deploy/oracle/entrypoint.sh deploy/oracle/run.sh deploy/oracle/install-timers.sh
+      - name: Verify headed browser and session persistence
+        run: docker run --rm --init --shm-size=1g --memory=4g --cpus=1.5 naukri-automation:test
+      - name: Run application regression checks against local fixtures
+        run: |
+          docker run --rm --init --shm-size=1g --memory=4g \
+            -e REQUIRE_BROWSER_TEST=true naukri-automation:test \
+            bash -c 'node naukri-helpers.test.js && node notice-period.test.js && node external-apply.test.js'
+      - name: Verify timer installation without enabling jobs
+        run: |
+          ./deploy/oracle/install-timers.sh
+          sudo systemd-analyze verify /etc/systemd/system/naukri-job@.service /etc/systemd/system/naukri-*.timer
+          for timer in refresh naukri wellfound indeed; do
+            test "$(systemctl is-enabled "naukri-$timer.timer" || true)" = disabled
+          done

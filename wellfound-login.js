@@ -13,10 +13,10 @@
  * session is saved to .wellfound-chrome-profile either way.
  */
 const { chromium } = require("playwright-core");
-const path = require("path");
+const { dataPath, browserOptions } = require("./runtime");
 const { CREDS } = require("./config");
 
-const PROFILE_DIR = path.join(__dirname, ".wellfound-chrome-profile");
+const PROFILE_DIR = dataPath(".wellfound-chrome-profile");
 const CHECK_ONLY = process.argv.includes("--check");
 
 const log = (m) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
@@ -37,7 +37,7 @@ async function isLoggedIn(page) {
 
 (async () => {
   const ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
-    channel: "chrome",
+    ...browserOptions(),
     headless: false,
     viewport: { width: 1280, height: 900 },
     args: [

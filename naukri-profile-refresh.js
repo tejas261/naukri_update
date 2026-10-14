@@ -13,7 +13,7 @@
  * the profile is not today's date.
  */
 const { chromium } = require("playwright-core");
-const path = require("path");
+const { dataPath, browserOptions } = require("./runtime");
 const fs = require("fs");
 const { CREDS, naukriProfileUrl, resumePath } = require("./config"); // credentials + profile URL come from .env, never hard-coded
 const { nextHeadline, uploadedToday } = require("./naukri-helpers");
@@ -26,9 +26,9 @@ const {
 const PROFILE_URL = naukriProfileUrl;
 const LOGIN_URL = `https://www.naukri.com/nlogin/login?URL=${PROFILE_URL}`;
 
-const PROFILE_DIR = path.join(__dirname, ".naukri-chrome-profile");
-const LOG_FILE = path.join(__dirname, "naukri-refresh.log");
-const ERROR_SHOT = path.join(__dirname, "naukri-refresh-error.png");
+const PROFILE_DIR = dataPath(".naukri-chrome-profile");
+const LOG_FILE = dataPath("naukri-refresh.log");
+const ERROR_SHOT = dataPath("naukri-refresh-error.png");
 const RESUME_PATH = resumePath; // set RESUME_FILE in .env to change which PDF is uploaded
 const LOGIN_MODE = process.argv[2] === "login";
 // Re-upload the CV even when the profile already shows today's date — needed when
@@ -133,7 +133,7 @@ async function googleLogin(ctx, page) {
 
 (async () => {
   const ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
-    channel: "chrome",
+    ...browserOptions(),
     headless: false, // naukri's Akamai bot-check blocks headless; minimised headed instead
     viewport: { width: 1280, height: 850 },
     // --window-position pins an on-screen origin; the profile still carries the old
