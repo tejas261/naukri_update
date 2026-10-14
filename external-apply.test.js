@@ -4,6 +4,9 @@
  * so the field-filling path is exercised without touching a live employer site.
  */
 const assert = require('assert');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const { atsKind, answerFor, SUCCESS_RE, SUBMIT_RE } = require('./external-apply');
 
 // ---- ATS classification: account-required portals must never be attempted ----
@@ -88,11 +91,14 @@ for (const t of ['Please fill all required fields', 'Application form', 'Error s
     return null;
   });
   if (!browser) { console.log('external-apply: pure checks passed (no Chrome, skipped browser pass)'); return; }
-  const page = await browser.newPage();
+  const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'external-apply-test-'));
+  const resumeFixture = path.join(fixtureDir, 'resume.pdf');
   try {
+    fs.writeFileSync(resumeFixture, '%PDF-1.4\n% Local file-input test fixture\n%%EOF\n');
+    const page = await browser.newPage();
     await page.setContent(form);
     const mod = require('./external-apply');
-    const res = await mod.fillFieldsForTest(page, CV, require('./config').resumePath);
+    const res = await mod.fillFieldsForTest(page, CV, resumeFixture);
     const val = (sel) => page.inputValue(sel);
     assert.strictEqual(await val('#fn'), 'Ankit');
     assert.strictEqual(await val('#em'), 'a@b.com');
@@ -108,5 +114,6 @@ for (const t of ['Please fill all required fields', 'Application form', 'Error s
     console.log('external-apply: all checks passed (including live form fill)');
   } finally {
     await browser.close().catch(() => {});
+    fs.rmSync(fixtureDir, { recursive: true, force: true });
   }
 })().catch((e) => { console.error('external-apply TEST FAILED:', e.message); process.exit(1); });

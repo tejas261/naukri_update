@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ./node_modules/.bin/playwright-core install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/* /root/.npm
 COPY . .
-RUN chmod +x deploy/oracle/entrypoint.sh && install -d -o node -g node -m 700 /data
+RUN chmod +x deploy/oracle/entrypoint.sh \
+    && install -d -o node -g node -m 700 /data \
+    && install -d -m 1777 /tmp/.X11-unix
 ENV DATA_DIR=/data BROWSER_CHANNEL=bundled TZ=Asia/Kolkata DISPLAY=:99
 USER node
 ENTRYPOINT ["/app/deploy/oracle/entrypoint.sh"]
