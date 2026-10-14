@@ -48,6 +48,11 @@ Fill in your own identity, experience, salary, and application answers. Set
 out of Git. Do not copy the example applicant details into live applications.
 Optional Gemini usage has separate billing and is disabled when its key is empty.
 
+If serving notice, set `LAST_WORKING_DAY=YYYY-MM-DD` in the private `.env`. The
+remaining notice days are recalculated each run in the configured timezone;
+otherwise the existing `NOTICE_PERIOD` value is used. Date-specific answers state
+the last working day without promising an unconfirmed joining date.
+
 You can leave `GOOGLE_PASSWORD` empty if you use the interactive login below. An
 expired refresh session will then require another interactive login instead of
 automatic password login. The existing `check-setup.js` still reports missing

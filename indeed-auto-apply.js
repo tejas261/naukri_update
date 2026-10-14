@@ -342,7 +342,10 @@ ${CV.email} | ${CV.phone}`;
       if (answer === GENERIC_ANSWER && !inRequired) { log(`  ⏭ optional unknown question skipped: "${label.slice(0, 50)}"`); continue; }
       if (input.type === 'number' || /years|salary|ctc|notice/i.test(label)) {
         const num = (answer.match(/\d+/) || ['1'])[0]; // numeric fields want a bare number
-        answer = /notice/i.test(label) ? '15' : num;
+        if (/notice|joining|availability|start date|when can you (start|join)/i.test(label)) {
+          answer = CV.noticeDays ?? (String(CV.noticePeriod).match(/^\s*\d+/) || [''])[0].trim();
+          if (answer === '') { log('  ⏭ notice duration is unknown — leaving it empty'); continue; }
+        } else answer = num;
       }
       setValue(input, answer);
       log(`  ✍ input: "${label.slice(0, 60)}" → "${String(answer).slice(0, 40)}"`);

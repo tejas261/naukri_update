@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const { noticeDetails } = require('./notice-period');
+const details = at => noticeDetails('', '2026-10-30', new Date(at));
+assert.equal(details('2026-10-14T07:00:00Z').noticeDays, '16');
+assert.equal(details('2026-10-14T18:29:59Z').noticeDays, '16');
+assert.equal(details('2026-10-14T18:30:00Z').noticeDays, '15');
+assert.equal(details('2026-10-30T07:00:00Z').noticeDays, '0');
+assert.equal(details('2026-11-01T07:00:00Z').noticeDays, '0');
+assert.match(details('2026-10-14T07:00:00Z').startDate, /serving notice.*30 October 2026/);
+assert.match(details('2026-11-01T07:00:00Z').startDate, /was 30 October 2026/);
+assert.equal(noticeDetails('30 days', '').noticeDays, '30');
+assert.equal(noticeDetails('Immediate', '').noticeDays, '0');
+assert.equal(noticeDetails('', '').noticeDays, '');
+assert.throws(() => noticeDetails('', '2026-02-30'), /valid YYYY-MM-DD/);
+assert.throws(() => noticeDetails('', '30-10-2026'), /valid YYYY-MM-DD/);
+console.log('notice-period: calendar, timezone, fallback, and invalid-date checks passed');

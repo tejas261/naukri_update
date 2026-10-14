@@ -30,7 +30,7 @@ jobs:
         run: |
           docker run --rm --init --shm-size=1g --memory=4g \
             -e REQUIRE_BROWSER_TEST=true naukri-automation:test \
-            bash -c 'node naukri-helpers.test.js && node external-apply.test.js'
+            bash -c 'node naukri-helpers.test.js && node notice-period.test.js && node external-apply.test.js'
       - name: Verify timer installation without enabling jobs
         run: |
           ./deploy/oracle/install-timers.sh

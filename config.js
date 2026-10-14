@@ -4,6 +4,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { noticeDetails } = require('./notice-period');
 
 function loadEnv(file) {
   const out = {};
@@ -39,7 +40,7 @@ const CV = {
   skills: g('SKILLS'),
   highlights: g('HIGHLIGHTS').split('||').map((s) => s.trim()).filter(Boolean),
   // application answers
-  noticePeriod: g('NOTICE_PERIOD'),
+  ...noticeDetails(g('NOTICE_PERIOD'), g('LAST_WORKING_DAY'), new Date(), process.env.TZ || 'Asia/Kolkata'),
   currentCTC: g('CURRENT_CTC'),                 // bare number for chatbots, e.g. "10"
   expectedCTC: g('EXPECTED_CTC'),               // e.g. "18-25"
   currentSalary: g('CURRENT_CTC') + ' LPA',     // formatted for free-text fields
@@ -55,7 +56,6 @@ const CV = {
   // derived sentences
   remoteOk: 'Yes, I am fully set up for remote work and also open to hybrid/onsite.',
   relocate: `Yes, I am open to relocation. I am currently based in ${g('LOCATION')}.`,
-  startDate: `I can start within ${g('NOTICE_PERIOD')}.`,
 };
 
 const CREDS = { email: g('GOOGLE_EMAIL') || g('EMAIL'), password: g('GOOGLE_PASSWORD') };
