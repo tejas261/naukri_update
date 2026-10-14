@@ -14,6 +14,7 @@
  */
 const path = require('path');
 const fs = require('fs');
+const { dataPath, browserOptions } = require('./runtime');
 const { CV, geminiKey, resumePath: RESUME_PATH } = require('./config'); // personal data from .env
 const { minimizeBrowserWindows, hideBrowserWindows, SHOW_FLAG } = require('./window-utils');
 const { applyExternal } = require('./external-apply'); // "Apply on company site" jobs, driven from Node
@@ -131,7 +132,7 @@ if (!site) {
 // Hard daily cap per site, tracked across runs in a state file — multiple logons in
 // one day resume the count instead of restarting it, and stop dead at the cap.
 const DAILY_CAP = site.dailyCap || 50;
-const STATE_FILE = path.join(__dirname, `apply-state-${SITE_ARG}.json`);
+const STATE_FILE = dataPath(`apply-state-${SITE_ARG}.json`);
 const todayKey = new Date().toDateString();
 let dayState = { date: todayKey, count: 0 };
 try { const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8').replace(/^﻿/, '')); if (s.date === todayKey) dayState = s; } catch (e) {}
@@ -145,7 +146,7 @@ const IDLE_ROTATE_MS = 4 * 60 * 1000;
 const log = (msg) => console.log(`[${new Date().toLocaleString()}] [${SITE_ARG}] ${msg}`);
 
 // ======== CSV log of every submitted application (created once, appended forever) ========
-const CSV_FILE = path.join(__dirname, 'applications.csv');
+const CSV_FILE = dataPath('applications.csv');
 const SKILLS = ['JavaScript', 'TypeScript', 'Python', 'Java', 'React', 'Next.js', 'React Native', 'Node.js',
   'Express', 'FastAPI', 'MongoDB', 'PostgreSQL', 'Redis', 'GraphQL', 'WebSockets', 'Docker', 'Kubernetes',
   'GCP', 'AWS', 'CI/CD', 'LangChain', 'LangGraph', 'RAG', 'LLM', 'GenAI', 'Machine Learning', 'MCP', 'Pinecone', 'FAISS'];
@@ -158,7 +159,7 @@ function logApplication(job) {
   if (fs.existsSync(CSV_FILE)) {
     const header = fs.readFileSync(CSV_FILE, 'utf8').split('\n')[0];
     if (!header.includes('Job Link') || !header.includes('Verified')) {
-      fs.renameSync(CSV_FILE, path.join(__dirname, 'applications-old.csv'));
+      fs.renameSync(CSV_FILE, dataPath('applications-old.csv'));
     }
   }
   if (!fs.existsSync(CSV_FILE)) {
@@ -204,8 +205,8 @@ function buildInjection() {
     log(`Daily cap of ${DAILY_CAP} applications already reached (${dayState.count} today) — exiting.`);
     return;
   }
-  const launch = () => chromium.launchPersistentContext(path.join(__dirname, site.profile), {
-    channel: 'chrome',
+  const launch = () => chromium.launchPersistentContext(dataPath(site.profile), {
+    ...browserOptions(),
     headless: false, // bot checks block headless; headed + minimised instead (same trick as naukri refresh)
     viewport: { width: 1280, height: 900 },
     args: [
@@ -238,7 +239,7 @@ function buildInjection() {
   const tuckAway = async (ctx) => {
     if (LOGIN_MODE || SHOW_WINDOW) return;
     const stow = MINIMIZE_ONLY ? minimizeBrowserWindows : hideBrowserWindows;
-    const dir = path.join(__dirname, site.profile);
+    const dir = dataPath(site.profile);
     const sweep = async () => {
       if (fs.existsSync(SHOW_FLAG)) return; // user asked to see it
       await stow(dir).catch(() => {});
@@ -377,7 +378,7 @@ function buildInjection() {
 
       // snapshot the wizard whenever it can't proceed, so the blocking field is visible
       if (/no Continue\/Submit button found|no Send button found/.test(clean)) {
-        page.screenshot({ path: path.join(__dirname, `blocked-step-${SITE_ARG}.png`) }).catch(() => {});
+        page.screenshot({ path: dataPath(`blocked-step-${SITE_ARG}.png`) }).catch(() => {});
       }
 
       // "▶ Applying: <title> @ <company>" (wellfound) / "▶ Opening: <title>" (indeed)

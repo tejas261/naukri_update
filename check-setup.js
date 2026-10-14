@@ -10,6 +10,7 @@
  */
 const fs = require("fs");
 const path = require("path");
+const { dataPath, browserOptions } = require("./runtime");
 
 const QUICK = process.argv.includes("--quick");
 const results = [];
@@ -193,7 +194,7 @@ function checkFiles() {
     ? pass("dependencies installed", "node_modules present")
     : fail("dependencies installed", "run: npm install");
 
-  const csv = path.join(__dirname, "applications.csv");
+  const csv = dataPath("applications.csv");
   if (!fs.existsSync(csv))
     return warn(
       "applications.csv",
@@ -208,7 +209,7 @@ function checkFiles() {
     : warn("applications.csv", "older file without the Verified column");
 
   for (const site of ["naukri", "wellfound"]) {
-    const f = path.join(__dirname, `apply-state-${site}.json`);
+    const f = dataPath(`apply-state-${site}.json`);
     if (!fs.existsSync(f)) {
       warn(`${site} daily count`, "no state file yet");
       continue;
@@ -246,7 +247,7 @@ async function checkSessions() {
     ],
   ];
   for (const [dir, url, ok, label] of targets) {
-    const full = path.join(__dirname, dir);
+    const full = dataPath(dir);
     if (!fs.existsSync(full)) {
       warn(label, "no saved session — run the login step");
       continue;
@@ -254,7 +255,7 @@ async function checkSessions() {
     let ctx;
     try {
       ctx = await chromium.launchPersistentContext(full, {
-        channel: "chrome",
+        ...browserOptions(),
         headless: false,
         viewport: { width: 1200, height: 800 },
         args: [

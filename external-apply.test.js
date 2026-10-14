@@ -83,7 +83,10 @@ for (const t of ['Please fill all required fields', 'Application form', 'Error s
     <button type=button>Submit Application</button>
   </form></body>`;
 
-  const browser = await chromium.launch({ channel: 'chrome' }).catch(() => null);
+  const browser = await chromium.launch(require('./runtime').browserOptions()).catch((error) => {
+    if (process.env.REQUIRE_BROWSER_TEST === 'true') throw error;
+    return null;
+  });
   if (!browser) { console.log('external-apply: pure checks passed (no Chrome, skipped browser pass)'); return; }
   const page = await browser.newPage();
   try {

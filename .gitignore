@@ -23,6 +23,7 @@ naukri_update/
 
 # deps
 node_modules/
+data/
 
 # runtime flag: pauses automatic window hiding (created by show-windows.js)
 .show-windows

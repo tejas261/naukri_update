@@ -1,5 +1,7 @@
 # Auto-Apply
 
+For Oracle Cloud ARM64 deployment with Docker, persistent sessions, and Linux scheduling, see [the Oracle setup guide](deploy/oracle/README.md).
+
 Job-application automation for **Naukri**, **Wellfound** and **Indeed**, plus an
 hourly **Naukri profile refresh** that keeps your profile at the top of recruiter
 searches. Everything runs locally in Chrome via Playwright, and every personal

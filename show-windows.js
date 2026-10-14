@@ -13,7 +13,7 @@
  * restored window would be swept away again within seconds. --hide clears it.
  */
 const fs = require("fs");
-const path = require("path");
+const { dataPath } = require("./runtime");
 const {
   restoreBrowserWindows,
   hideBrowserWindows,
@@ -46,7 +46,7 @@ const PROFILES = {
     } catch (e) {}
     let n = 0;
     for (const name of names)
-      n += await hideBrowserWindows(path.join(__dirname, PROFILES[name]));
+      n += await hideBrowserWindows(dataPath(PROFILES[name]));
     console.log(
       n
         ? `hid ${n} window(s); automatic hiding resumed`
@@ -61,7 +61,7 @@ const PROFILES = {
   } catch (e) {}
   let total = 0;
   for (const name of names) {
-    const n = await restoreBrowserWindows(path.join(__dirname, PROFILES[name]));
+    const n = await restoreBrowserWindows(dataPath(PROFILES[name]));
     total += n;
     if (n) console.log(`restored ${n} window(s) for ${name}`);
   }
