@@ -9,14 +9,18 @@ const { dataPath, browserOptions } = require('../../runtime');
   const server = http.createServer((req, res) => {
     res.end('<title>Oracle browser smoke check</title><p>Browser ready</p>');
   });
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const url = `http://127.0.0.1:${server.address().port}`;
-  const profile = fs.mkdtempSync(dataPath('smoke-profile-'));
+  let profile;
   let ctx;
-  const launch = () => chromium.launchPersistentContext(profile, {
-    ...browserOptions(), headless: false, viewport: { width: 1280, height: 850 },
-  });
   try {
+    profile = fs.mkdtempSync(dataPath('smoke-profile-'));
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+    const url = `http://127.0.0.1:${server.address().port}`;
+    const launch = () => chromium.launchPersistentContext(profile, {
+      ...browserOptions(), headless: false, viewport: { width: 1280, height: 850 },
+    });
     ctx = await launch();
     let page = ctx.pages()[0] || await ctx.newPage();
     await page.goto(url);
@@ -36,6 +40,6 @@ const { dataPath, browserOptions } = require('../../runtime');
   } finally {
     if (ctx) await ctx.close();
     server.close();
-    fs.rmSync(profile, { recursive: true, force: true });
+    if (profile) fs.rmSync(profile, { recursive: true, force: true });
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });
